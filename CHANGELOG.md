@@ -1,5 +1,10 @@
 # Changelog
 
+## V0.0 Codex Cloud verification
+- Installed the pinned TypeScript dependency and passed 25 offline tests on Node 24.22.3.
+- Verified fixture rendering, filtering, keyboard focus and reflow in headless Chromium at mobile and desktop widths.
+- Added a one-shot headless Brickset diagnostic with proxy-only HTTPS, bounded read requests and aggregate output. Cloud POST secret substitution and live compatibility remain open.
+
 ## V0.0 — 2026-11-24
 - Revalidated Brickset v3 documentation and key/permission guidance.
 - Implemented typed read-only provider adapter, synthetic fixtures, local diagnostic preview, explicit live permission/budget gates, safe errors and no-store authenticated server.
