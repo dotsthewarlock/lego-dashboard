@@ -1,6 +1,6 @@
 # LEGO Companion Dashboard — V0.0 compatibility diagnostic
 
-**Decision: HOLD at V0.0.** Personal companion use is approved and a key issued (owner-reported provider email, 2026-11-24); actual authentication, data validation, persistent cache and image permissions are still open. This is a read-only diagnostic, not the V0.1 dashboard or installable PWA. No production hosting or live API requests have been made.
+**Decision: HOLD at V0.0 (outcome B).** Personal companion use approved; first owner-operated live headless run reported successful authentication and catalogue retrieval on 2026-11-24. See docs/ACCEPTANCE.md for scope and remaining gates. Nonempty collection reconciliation, broader search/coverage, quota accounting, persistent cache and image permissions remain open. This is a read-only diagnostic, not the V0.1 dashboard or installable PWA. No production hosting. Codex remains primary for coding; the private terminal is the proven owner-reported live-test path.
 
 ## Primary workflow — Codex Cloud
 
