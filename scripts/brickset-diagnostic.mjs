@@ -51,6 +51,15 @@ export async function diagnose(config, transport) {
   }
 }
 
+export function useHttpsProxy(env) {
+  const proxy = new URL(env.https_proxy || env.HTTPS_PROXY);
+  if (!['http:', 'https:'].includes(proxy.protocol) || env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+    throw new Error('secure_proxy_unavailable');
+  }
+  // Force the managed HTTPS proxy even if NO_PROXY has broader exclusions.
+  return http.setGlobalProxyFromEnv({HTTPS_PROXY: proxy.href, NO_PROXY: 'localhost'});
+}
+
 export async function run(env = process.env) {
   const unavailable = code => ({mode: 'live', status: 'error', calls: 0, code});
   if (env.BRICKSET_NETWORK_SECRETS_CONFIRMED !== 'yes' ||
@@ -61,12 +70,7 @@ export async function run(env = process.env) {
 
   let restoreProxy;
   try {
-    const proxy = new URL(env.https_proxy || env.HTTPS_PROXY);
-    if (!['http:', 'https:'].includes(proxy.protocol) || env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
-      return unavailable('secure_proxy_unavailable');
-    }
-    // This one-shot process uses the Cloud HTTPS proxy even if NO_PROXY has broader exclusions.
-    restoreProxy = http.setGlobalProxyFromEnv({HTTPS_PROXY: proxy.href, NO_PROXY: 'localhost'});
+    restoreProxy = useHttpsProxy(env);
   } catch {
     return unavailable('secure_proxy_unavailable');
   }
