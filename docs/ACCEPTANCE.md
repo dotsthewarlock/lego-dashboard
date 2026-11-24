@@ -13,6 +13,7 @@
 
 - **Pass — reproducible install and offline suite.** Generated the npm lockfile for TypeScript 5.8.3, ran `npm ci --ignore-scripts --no-audit --no-fund`, and passed all 27 tests on Node 24.22.3. Two new offline tests check the form body, exact echo assertions, and rejection of unsafe inputs.
 - **Blocked — managed POST substitution.** Status reports both Brickset bindings ready and scoped to `brickset.com`. Presence alone leaves body substitution unverified. The synthetic echo host was denied by the current restricted policy, and the separate synthetic binding was absent. The probe requires a temporary host grant and a public synthetic value in a separate network secret. No Brickset API requests were made.
+- **Blocked — follow-up probe.** Ran `node scripts/cloud-post-probe.mjs` once on the Cloud task. It printed `binding_missing_or_unsafe` and exited with status 1 before sending a POST. The running task lacked `CLOUD_POST_PROBE` and its enforced allowlist omitted `httpbingo.org`. A fresh `npm ci` and all 27 offline tests passed. For a separately authorized Brickset compatibility test while Cloud substitution is unverified, use the [owner-operated headless fallback](../README.md#owner-operated-fallback--private-terminal).
 
 | ID | Status | Evidence / next action |
 |---|---|---|
