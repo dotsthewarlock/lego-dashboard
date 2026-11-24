@@ -1,0 +1,8 @@
+// Entirely synthetic; not observed Brickset responses or actual collection records.
+export const envelope=(field:string,values:unknown[],matches=values.length)=>({status:'success',matches,[field]:values});
+const set=(setID:number,number:string,numberVariant:number,name:string,extra:object)=>({setID,number,numberVariant,name,theme:'Fixture theme',subtheme:'Fixture grouping',year:2025,...extra});
+export const mockSets=[set(900001,'90001',1,'Fixture display house',{released:true,LEGOCom:{CA:{retailPrice:199.99},US:{retailPrice:149.99}},barcode:{UPC:'001234567890'}}),set(900002,'90001',2,'Fixture display house variant',{released:true,LEGOCom:{US:{retailPrice:39.99}}}),set(900003,'90003',1,'Fixture older vehicle',{year:2002,released:true,exitDate:'2004-01-01',LEGOCom:{CA:{retailPrice:29.99}}}),set(900004,'90004',1,'Fixture upcoming model',{year:2027,released:false,launchDate:'2027-01-01'}),set(900005,'90005',1,'Fixture small promotional set',{released:true}),set(900006,'90006',1,'Fixture unknown release',{})];
+export const mockPages=[envelope('sets',mockSets.slice(0,3),6),envelope('sets',mockSets.slice(3),6)];
+export const mockCollection=envelope('sets',[{setID:900001,owned:true,wanted:true,qtyOwned:2,qtyWanted:1,qtyOwnedNew:1,qtyOwnedUsed:1,wantedPriority:2,flags:[{flagNo:1,value:true}]},{setID:900002,owned:false,wanted:true,qtyOwned:0,qtyWanted:1,wantedPriority:99,flags:[]},{setID:900003,owned:true,qtyOwned:1,qtyWanted:0,flags:[{flagNo:1,value:false}]},{setID:999999,qtyOwned:1}]);
+export const mockLabels=envelope('flags',[{flagNo:1,label:'Fixture flag'}]);
+export const mockUsage=envelope('apiKeyUsage',[{dateStamp:'2026-11-24',count:9,dailyLimit:100}]);

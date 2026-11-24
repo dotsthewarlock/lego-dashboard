@@ -1,0 +1,13 @@
+const el=id=>document.getElementById(id), unknown=v=>v==null?'Unknown':String(v), price=r=>r.msrp==null?'Unknown':r.msrp.toFixed(2);
+function node(tag,cls,value){const n=document.createElement(tag);n.className=cls;n.textContent=value;return n;}
+try{
+ const r=await fetch('/api/diagnostic',{cache:'no-store'}), data=await r.json();
+ if(!r.ok||data.status!=='success'){el('status').textContent=`Diagnostic unavailable (${data.mode??'unknown'}): ${data.code??'upstream'}. No collection data returned.`;}
+ else{
+ const s=data.snapshot;el('status').textContent=s.mode==='fixture'?'FIXTURE MODE — entirely synthetic data, not your account.':'LIVE DIAGNOSTIC — point-in-time sample, not continuously refreshed.';
+ el('details').hidden=false;const missing=key=>s.sets.filter(x=>x[key].msrp===null).length;const joined=s.sets.filter(x=>x.personal!==null).length;
+ el('summary').textContent=`Observed ${s.observedAt}\nCatalogue: ${s.sets.length} of ${s.matches} query matches (not entire catalogue)\nPersonal records: ${s.personal.length}; joined: ${joined}; outside sample: ${s.personal.length-joined}\nCAD MSRP missing: ${missing('CAD')}/${s.sets.length} · USD MSRP missing: ${missing('USD')}/${s.sets.length}\nActual upstream calls: ${s.calls}`;
+ const render=()=>{const q=el('search').value.trim().toLowerCase();const rows=s.sets.filter(x=>[x.number,`${x.number}-${x.variant}`,x.name,x.theme,x.subtheme].some(v=>v?.toLowerCase().includes(q)));el('count').textContent=`${rows.length} sample results`;el('rows').replaceChildren(...rows.map(x=>{const a=node('article','set','');const p=x.personal; a.append(node('div','name',`${x.number}-${x.variant} · ${x.name}`),node('div','meta',`${unknown(x.theme)} / ${unknown(x.subtheme)} · ${unknown(x.year)} · released: ${unknown(x.released)} · launch: ${unknown(x.launchDate)} · exit: ${unknown(x.exitDate)}`),node('div','personal',`Owned qty: ${unknown(p?.qtyOwned)} · Wanted qty: ${unknown(p?.qtyWanted)} · priority code: ${unknown(p?.wantedPriority)}`),node('div','price',`CAD MSRP ${price(x.CAD)} / USD MSRP ${price(x.USD)}`));return a;}));};
+ el('search').addEventListener('input',render);render();el('diagnostics').textContent=JSON.stringify({mode:s.mode,probes:s.probes,usage:s.usage,flagLabels:s.flagLabels,missingUPC:s.sets.filter(x=>!x.UPC).length,missingEAN:s.sets.filter(x=>!x.EAN).length,personalFieldMissing:Object.fromEntries(['qtyOwned','qtyWanted','wantedPriority','qtyOwnedNew','qtyOwnedUsed','qtyOwnedLoose','flags'].map(k=>[k,s.personal.filter(x=>x[k]===null).length]))},null,2);
+ }
+}catch{el('status').textContent='Offline or invalid diagnostic response. No collection data returned.';}

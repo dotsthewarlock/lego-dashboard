@@ -1,0 +1,29 @@
+V0.0 local test rerun — 2026-11-24
+Node 22.16.0; global TypeScript 5.8.3.
+Command: npm test
+Outcome: 20 passed, 0 failed, 0 skipped; 525.927035 ms reported by Node test runner.
+No live API calls. Simulated upstream transport and local HTTP only.
+
+PASS fixture is labelled and has zero network calls
+PASS distinct variants and provider ID join; owned and wanted independent
+PASS missing versus zero; no FX fallback; raw priority
+PASS unmatched collection kept; lifecycle not invented
+PASS incomplete collection envelope rejects
+PASS duplicate page rejects
+PASS missing array does not become empty collection
+PASS explicit empty collection accepted
+PASS live candidate request sequence fixed POST, no query secrets, bounded pagination
+PASS no permission no calls
+PASS insufficient attested budget no calls
+PASS usage insufficient stops before collection
+PASS invalid key
+PASS quota
+PASS malformed
+PASS HTTP error
+PASS network error
+PASS timeout mapped and not retried
+PASS fixture HTTP: labelled data, no secrets, no cache, no mutations or arbitrary files
+PASS live UI and API protected; missing permission returns explicit error, no fixture fallback
+
+This is a condensed record of the observed rerun, not an actual API or remote CI test.
+Original raw TAP evidence remains in the prior local Git bundle.

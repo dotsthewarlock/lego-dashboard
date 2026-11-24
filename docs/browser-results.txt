@@ -1,0 +1,1 @@
+Browser QA: NOT TESTED. Bundled Playwright browser missing; system Chromium launch worked but navigation to loopback returned ERR_BLOCKED_BY_ADMINISTRATOR. No UI screenshot or reflow evidence.
