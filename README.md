@@ -31,37 +31,27 @@ The runner starts no server and prints one aggregate JSON report. It attempts at
 
 ## Owner-operated fallback — private terminal
 
-If Cloud POST substitution remains unavailable, the shortest fallback is the same headless diagnostic on the owner's computer. Use an existing private Codespace only if a local terminal is impractical and its usage is acceptable. This workflow needs no HTTP server or forwarded port.
+Use an owner-controlled Bash terminal on your computer or in an existing private GitHub Codespace. Run from the branch you intend to test. This command needs Node 22 or newer and opens no HTTP server or forwarded port.
 
-After separately authorizing the run, use Brickset's official HTTPS forms privately to obtain the hash and check the budget. Confirm at least nine calls remain after login and the quota check. If no usage record is returned, stop and retain only the sanitized status. [Brickset login](https://brickset.com/api/v3.asmx?op=login) · [Quota check](https://brickset.com/api/v3.asmx?op=getKeyUsageStats)
+1. Authorize one read-only run. Use Brickset’s HTTPS forms privately to obtain the user hash and verify at least 16 calls remain after login and the quota check. Stop if Brickset reports no usage record. [Brickset login](https://brickset.com/api/v3.asmx?op=login) · [Quota check](https://brickset.com/api/v3.asmx?op=getKeyUsageStats)
+2. Run the commands below. Enter the confirmed remaining calls to approve this run, then enter the API key and user hash at the hidden prompts. Keep terminal tracing and recording off. The shell passes both values to Node over stdin.
 
-In an owner-controlled Bash terminal outside Codex, run `npm ci --ignore-scripts --no-audit --no-fund` and `npm run build` from the repository root. The hidden prompts below pass the key and hash over stdin to the one-shot Node process. Keep terminal tracing and recording off. Share only the aggregate result or error code.
+   ```bash
+   npm ci --ignore-scripts --no-audit --no-fund
+   npm run --silent diagnostic:owner
+   ```
 
-```bash
-(
-  set +x
-  set -e -o pipefail
-  unset local_brickset_key local_brickset_hash
-  IFS= read -rs -p 'Brickset API key: ' local_brickset_key
-  printf '\n'
-  IFS= read -rs -p 'Brickset user hash: ' local_brickset_hash
-  printf '\n'
-  IFS= read -r -p 'Confirmed remaining calls (at least 9): ' remaining_calls
+3. Review the JSON privately. Record only sanitized aggregate evidence or the fixed error code. The report contains account-specific quota and collection totals, so keep it out of public issues and PRs.
 
-  printf '%s\n' "$local_brickset_key" "$local_brickset_hash" |
-    NODE_TLS_REJECT_UNAUTHORIZED=1 node --input-type=module -e '
-      import {readFileSync} from "node:fs";
-      import {diagnose} from "./scripts/brickset-diagnostic.mjs";
-      const [apiKey, userHash] = readFileSync(0, "utf8").split("\n");
-      const report = await diagnose({
-        apiKey, userHash, permissionConfirmed: true,
-        remainingCalls: Number(process.argv[1]), year: 2025,
-      }, fetch);
-      console.log(JSON.stringify(report));
-      process.exitCode = report.status === "success" ? 0 : 1;
-    ' "$remaining_calls"
-)
-```
+The expanded profile attempts at most 16 calls. The first usage check must leave enough headroom for the remaining 15 calls. A full run includes two usage reads, two authentication checks, two personal reads, six catalogue pages and up to four search probes. The runner stops at the first request or validation error, exits 1 and prints a fixed code with the attempted count. It performs no retries or polling. Skipped probes reduce the request count. Budget and terminal input errors can also stop the command before credentials are requested.
+
+- **Catalogue.** One page of up to 16 rows per slice, sorted by number. The slices cover 1999, the current UTC year for City, Technic, Collectable Minifigures and Gear, and the next UTC year, for up to 96 distinct records. Compare returned and in-scope counts per slice. The report counts observed years, themes, variant families, Brickset product categories, release flags and launch/exit date coverage. An exit date alone does not establish retirement or retail availability.
+- **Queries.** A sampled record anchors each probe. Full number uses `setNumber` and prefers an observed variant family. Name uses ranked `query`. Theme and subtheme use the dedicated filters, with subtheme scoped to its parent theme. Each probe reports the provider match total, page size returned, exact field matches, and whether the original identity was among those exact matches. Text comparisons ignore case and outer whitespace. A `null` probe lacked a usable anchor. A truncated page can miss the anchor, and more than one exact result remains ambiguous for a unique lookup.
+- **Prices and barcodes.** CAD and USD MSRP each report missing, zero and positive counts. Barcode results distinguish missing, invalid format, all-zero placeholders, failed checksum and structural validity. UPC uses 12 digits and EAN uses 8 or 13 digits, with the GS1 check digit. Check selected source prices and dates privately. Barcode assignment and regional alias coverage require separate evidence.
+- **Collection.** `evidence: "empty"` covers only the empty case. For nonempty results, compare distinct Owned and Wanted counts and known quantity totals with Brickset privately. Quantity totals are decimal strings and include every known value across the collection. Priority coverage is measured on wanted records. New, used and loose coverage and reconciliation are measured separately on owned records. Review the flag coverage and label counts privately against existing records. The report omits personal rows, priority codes and flag labels.
+- **Quota.** The report includes the latest provider-reported daily limit and used count at each read. A delta is reported when Brickset supplies the same day on both reads. Counter timing, other activity on the key, and the provider’s reset timezone can affect interpretation. Compare the delta with attempted calls privately.
+
+A successful run means the read sequence completed. Use the per-check counts and private comparisons to assess compatibility. [Brickset API documentation](https://brickset.com/article/52664/api-version-3-documentation) · [Brickset set categories](https://brickset.com/article/110200/brickset-set-categories)
 
 ## Public source control policy
 

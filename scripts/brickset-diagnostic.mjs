@@ -1,9 +1,14 @@
+import {readFileSync} from 'node:fs';
 import * as http from 'node:http';
 import {pathToFileURL} from 'node:url';
+import {EXPANDED_REQUEST_LIMIT} from '../dist/compatibility.js';
 import {DiagnosticError} from '../dist/domain.js';
 import {BricksetProvider} from '../dist/provider.js';
 
 const errorCodes = new Set(['quota', 'unauthorized', 'timeout', 'upstream', 'invalid', 'unconfigured']);
+
+const errorCode = error =>
+  error instanceof DiagnosticError && errorCodes.has(error.code) ? error.code : 'upstream';
 
 const count = (records, predicate) => records.filter(predicate).length;
 
@@ -46,9 +51,53 @@ export async function diagnose(config, transport) {
       },
     };
   } catch (error) {
-    const code = error instanceof DiagnosticError && errorCodes.has(error.code) ? error.code : 'upstream';
-    return {mode: 'live', status: 'error', calls, code};
+    return {mode: 'live', status: 'error', calls, code: errorCode(error)};
   }
+}
+
+function expandedFailure(code, calls = 0) {
+  return {mode: 'live', profile: 'expanded', status: 'error', calls, requestLimit: EXPANDED_REQUEST_LIMIT, code};
+}
+
+export async function diagnoseExpanded(config, transport) {
+  let calls = 0;
+  try {
+    const provider = new BricksetProvider(config, (url, options) => {
+      calls++;
+      return transport(url, options);
+    });
+    const summary = await provider.expandedDiagnostic();
+    return {
+      mode: 'live', profile: 'expanded', status: 'success', calls,
+      requestLimit: EXPANDED_REQUEST_LIMIT, ...summary,
+    };
+  } catch (error) {
+    return expandedFailure(errorCode(error), calls);
+  }
+}
+
+async function runOwner(args) {
+  if (args.length !== 1 || !/^\d+$/.test(args[0]) || process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+    return expandedFailure('unconfigured');
+  }
+  const remainingCalls = Number(args[0]);
+  if (!Number.isSafeInteger(remainingCalls) || remainingCalls < EXPANDED_REQUEST_LIMIT) {
+    return expandedFailure('unconfigured');
+  }
+
+  let lines;
+  try {
+    lines = readFileSync(0, 'utf8').split('\n');
+  } catch {
+    return expandedFailure('unconfigured');
+  }
+  const [apiKey, userHash, end] = lines;
+  if (lines.length !== 3 || end !== '' || !apiKey.trim() || !userHash.trim()) {
+    return expandedFailure('unconfigured');
+  }
+  return diagnoseExpanded({
+    apiKey, userHash, permissionConfirmed: true, remainingCalls, year: new Date().getUTCFullYear(),
+  }, fetch);
 }
 
 export function useHttpsProxy(env) {
@@ -89,7 +138,8 @@ export async function run(env = process.env) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
-  const result = await run();
+  const [mode, ...args] = process.argv.slice(2);
+  const result = mode === '--owner-stdin' ? await runOwner(args) : await run();
   process.stdout.write(JSON.stringify(result) + '\n');
   process.exitCode = result.status === 'success' ? 0 : 1;
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## V0.0 expanded compatibility diagnostic — 2026-11-24
+- Added a 16-call owner-operated diagnostic with cross-year catalogue slices, field-specific search probes, separate missing and zero MSRP, GTIN checks, collection field coverage, and before/after quota observations.
+- Added the private-terminal command and nine synthetic regression tests. The expanded live run is pending owner verification.
+
 ## V0.0 first live compatibility evidence — 2026-11-24
 - Verified PR #2 merged and reviewed owner-reported successful read-only headless diagnostic. Updated acceptance scope and next checks; no personal records or raw provider payloads published.
 - Outcome B / HOLD for V0.1. No runtime changes or new test execution in this documentation update.
