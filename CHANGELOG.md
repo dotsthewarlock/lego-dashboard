@@ -15,3 +15,7 @@
 - Updated secure browser-only instructions and permission record; persistent caching and image rights remain unresolved.
 - Re-ran local tests: 20 passed, zero failed. No live calls.
 - Existing public repository initialized; transfer of the audited implementation uses a descendant of the existing README commit rather than rewriting history.
+
+## V0.0 Codex-first workflow — 2026-11-24
+- Added repository agent instructions and Codex Cloud setup; retained Codespaces as optional fallback.
+- Clarified network-secret requirements and sanitized live-test boundary; no runtime code changes, new tests, cloud environment creation or live API calls.
