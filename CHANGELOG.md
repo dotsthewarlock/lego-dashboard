@@ -1,5 +1,9 @@
 # Changelog
 
+## V0.0 Cloud POST preflight
+- Added the npm lockfile and verified a clean install and the offline suite.
+- Added a synthetic URL-encoded POST probe and documented the temporary Cloud settings and owner-operated headless fallback.
+
 ## V0.0 Codex Cloud verification
 - Installed the pinned TypeScript dependency and passed 25 offline tests on Node 24.22.3.
 - Verified fixture rendering, filtering, keyboard focus and reflow in headless Chromium at mobile and desktop widths.

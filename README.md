@@ -4,66 +4,64 @@
 
 ## Primary workflow — Codex Cloud
 
-ChatGPT Project is the architecture/research authority; Codex Cloud is the primary coding and testing environment; GitHub main is the versioned source of truth. Codespaces is optional and reserved for a concrete secure-live-test or interactive-preview blocker. No platform-specific application migration is required.
+Use the existing private Codex Cloud environment and select `dotsthewarlock/lego-dashboard` on `main`. From the repository root, run `npm ci --ignore-scripts --no-audit --no-fund` and `npm test` with Node 22 or newer. For fixture UI checks, start `DIAGNOSTIC_MODE=fixture npm start`. Keep fixture mode as the startup default.
 
-1. Open ChatGPT/Codex on the web, select Work in > Cloud, and use the default environment if available or Create environment. Select the existing repository `dotsthewarlock/lego-dashboard` and branch main. Keep any reusable environment private (Only me). Check subscription/usage availability; no new paid service authorized.
-2. First task: read AGENTS.md and referenced docs, inspect current main, confirm Node 22+, install dependencies with `npm install --ignore-scripts --no-audit --no-fund`, run `npm test`, and run fixture-only browser QA using Browser Use or HTTP Preview (port 3000) if available. Do not add live credentials yet. Verify 20 baseline tests (or explain discrepancies), review generated lockfile if installation succeeds, and report actual results. Prepare changes for review via a branch/PR; do not rewrite history.
-3. For repeat work, configure install script with the dependency command above; once a verified lockfile exists use `npm ci --ignore-scripts --no-audit --no-fund`. Start only the fixture server with `DIAGNOSTIC_MODE=fixture npm start`. No automatic live startup. Use package-manager domains only for initial development; avoid broad internet access.
-4. For a subsequent explicitly initiated live test, use current Codex Cloud private HTTP/network secrets scoped only to `brickset.com` for BRICKSET_API_KEY and BRICKSET_USER_HASH, if the account supports them. Network secrets provide placeholders with proxy substitution; direct environment variables are visible to programs and are not an equivalent protection. The existing adapter sends secrets as URL-encoded POST form fields; actual proxy compatibility is not yet established. First validate the fixed request contract and secret delivery with non-sensitive values, inspect current official docs, and ensure the HTTP client uses the configured proxy. Do not expose raw credentials, disable proxy/security controls, place secrets in setup scripts, ordinary variables, saved filesystem, task prompts or logs, or broaden egress to work around failures. Legacy Codex Cloud setup-only secrets differ; do not use them as a persistent runtime workaround.
-5. Use the [headless cloud diagnostic](#headless-cloud-diagnostic) for an explicitly authorized live test after its prerequisites are verified. Keep actual personal data out of task artifacts, screenshots, source, PRs and persistent caches.
-6. If safe network-secret delivery, private preview, or the necessary validation is unavailable, retain fixture-first Codex development and use the optional Codespaces workflow below for owner-operated live validation. Do not create or pay for other infrastructure by default.
+The Cloud headless diagnostic and its transport probe use Node 24.14 or newer. See the [Codex Cloud documentation](https://learn.chatgpt.com/docs/cloud) and [cloud environment documentation](https://learn.chatgpt.com/docs/environments/cloud-environments).
 
-See the [Codex Cloud documentation](https://learn.chatgpt.com/docs/cloud) and [cloud environment documentation](https://learn.chatgpt.com/docs/environments/cloud-environments) for platform setup.
+## Verify Cloud POST substitution with synthetic data
 
-## Headless cloud diagnostic
+1. In a private Cloud task, temporarily add `httpbingo.org` to restricted Internet access. Keep the existing domains and package-manager preset. Create a **network secret** with the environment variable name `CLOUD_POST_PROBE`, allowed domain `httpbingo.org` only, and the public synthetic value `CodexPostProbe2026`. This probe uses a public echo service. Use only that synthetic value for its binding and keep the existing Brickset bindings scoped separately.
+2. Apply the settings and confirm the network-secret binding is ready on the running task. From the repository root run `npm run build` and then `node scripts/cloud-post-probe.mjs`. The script uses the diagnostic's HTTPS proxy setup with TLS verification. It sends one URL-encoded POST to the echo service with the synthetic placeholder in both credential-shaped fields and a separate control field. It prints one result code.
+3. A `pass` confirms that the echo service received the expected synthetic value in both fields and the unchanged control field. `form_mismatch` means the POST reached the echo service but did not prove substitution. `binding_missing_or_unsafe`, `secure_proxy_unavailable`, `echo_http_error`, and `echo_failed` identify setup or transport blockers. Record the result code, then remove the temporary secret and echo-host grant. Keep the probe out of environment startup.
 
-- Keep the Cloud environment private. In environment settings, scope both `BRICKSET_API_KEY` and `BRICKSET_USER_HASH` network-secret bindings to `brickset.com`. Verify both bindings are ready and confirm with non-sensitive values that the managed proxy substitutes placeholders inside URL-encoded HTTPS POST forms. Keep the actual values out of ordinary process variables, shell commands and files. If POST substitution cannot be verified, stop before using real credentials in Cloud.
-- Recheck the official Brickset API contract, permission and current quota. Obtain the user hash privately through Brickset. Run only after the owner explicitly authorizes this run and confirms there are at least nine calls left after checking usage.
-- Use Node 24.14 or newer for the headless runner's built-in HTTPS proxy support. The fixture app still supports Node 22+. Build with `npm run build` from the repository root. In a private terminal, with the above checks complete and the binding names provided by the platform, invoke the runner once. Replace the example budget of 9 with the confirmed remaining calls.
+This checks the Cloud transport with a synthetic binding. Brickset authentication and quota require a separately authorized run.
+
+## Headless Cloud diagnostic
+
+- In the private environment's settings, allow `brickset.com` under restricted Internet access. Configure two **network secret** bindings with environment variable targets `BRICKSET_API_KEY` and `BRICKSET_USER_HASH`. Set the allowed domain of each binding to `brickset.com` only. Verify both bindings are ready on the running task. Keep credential values in the platform's secure secret settings.
+- Require a passing synthetic POST check before relying on Cloud substitution. Recheck the official Brickset API contract and permission, and obtain the hash and current quota privately through Brickset. Run only after the owner explicitly authorizes one run and confirms at least nine calls remain after the quota check. [Brickset API documentation](https://brickset.com/article/52664/api-version-3-documentation)
+- Run `npm run build`. From a private terminal, with the prerequisites complete and the bindings provided by the platform, run the command below once. Replace the example budget of 9 with the confirmed remaining calls.
 
 ```bash
 BRICKSET_NETWORK_SECRETS_CONFIRMED=yes BRICKSET_PERMISSION_CONFIRMED=yes \
   BRICKSET_REMAINING_CALLS=9 node scripts/brickset-diagnostic.mjs
 ```
 
-The runner uses the configured HTTPS proxy with TLS verification, starts no server, and prints one JSON report. It counts up to nine attempted read-only calls, with no retry or polling. The report includes sample and collection totals, field coverage and the exact-variant result. Known quantity totals are decimal strings, with missing quantities counted separately. Errors return a fixed code and exit status 1. A successful report with a false or undetermined variant check still needs review. Keep results private and compare aggregate Owned and Wanted counts and quantities against the owner's Brickset UI.
+The runner starts no server and prints one aggregate JSON report. It attempts at most nine read-only calls, with no retry or polling. Known quantity totals are decimal strings and missing quantities are counted separately. Errors return a fixed code and exit status 1. Compare aggregate Owned and Wanted counts and quantities privately against the Brickset UI. A false or undetermined exact-variant result still needs review.
 
-## Optional fallback — browser-only Codespaces workflow
+## Owner-operated fallback — private terminal
 
-1. Existing repository: https://github.com/dotsthewarlock/lego-dashboard. Public source control is explicitly approved. Never commit credentials, live collection records, provider payloads, or private configuration. Use synthetic fixtures only.
-2. Use Code > Codespaces > Create codespace on main. Check available free usage/billing first; do not activate paid usage without approval. In the browser terminal confirm node -v (22+) and npm -v.
-3. Run npm install --ignore-scripts --no-audit --no-fund, npm test, then npm start. TypeScript is pinned at 5.8.3. Dependency installation was not verified in the offline environment; no lockfile was generated. Review and commit the generated package-lock.json only after installation succeeds. No production dependencies.
-4. In the Ports panel forward port 3000. Confirm visibility is Private (creator-only), not Public or Organization. Open the forwarded HTTPS browser URL. The local server speaks HTTP over loopback; do not switch its local protocol to HTTPS without configuring TLS. Default mode is synthetic and has zero upstream calls. Test the six sample rows, exact variant filter 90001-2, unknown and zero quantities, native prices, no results, 320px reflow, keyboard focus, and Chromebook/Pixel usability. Browser QA was blocked in the local execution environment.
-5. Stop the server with Ctrl+C and stop the codespace when finished. This is a temporary development preview, not a production deployment. No service worker, browser data cache or public hosting. GitHub Pages is not appropriate for live secrets.
+If Cloud POST substitution remains unavailable, the shortest fallback is the same headless diagnostic on the owner's computer. Use an existing private Codespace only if a local terminal is impractical and its usage is acceptable. This workflow needs no HTTP server or forwarded port.
 
-## Live diagnostic (only in private preview)
+After separately authorizing the run, use Brickset's official HTTPS forms privately to obtain the hash and check the budget. Confirm at least nine calls remain after login and the quota check. If no usage record is returned, stop and retain only the sanitized status. [Brickset login](https://brickset.com/api/v3.asmx?op=login) · [Quota check](https://brickset.com/api/v3.asmx?op=getKeyUsageStats)
 
-- Personal companion use and key issuance were confirmed in the owner's approval report. No bulk catalogue caching, image display, long-term retention or redistribution is authorized by this implementation. Obtain explicit clarification before those features.
-- On the official HTTPS test page https://brickset.com/api/v3.asmx?op=login, enter the approved key and your own Brickset credentials, then Invoke (POST). Obtain the hash from the response. Never put password/key/hash in chat, screenshots, source, issues or logs. Do not retain the Brickset password in the app. Close the response tab after copying the hash. Token lifespan and revocation remain unverified.
-- Use https://brickset.com/api/v3.asmx?op=getKeyUsageStats and the same key (POST) to inspect actual quota, counting login and diagnostic calls conservatively. Confirm sufficient remaining calls (at least 9 after this check). If no usage record is returned, stop and report only the sanitized status, not the key or payload.
-- In a fresh private Codespaces browser terminal, ensure no shell tracing/recording and no public forwarding. Use hidden-input prompts instead of shell history/command arguments. Choose a unique preview password of at least 24 characters, distinct from Brickset credentials. Enter the confirmed remaining quota as an integer. Do not paste secrets into chat.
+In an owner-controlled Bash terminal outside Codex, run `npm ci --ignore-scripts --no-audit --no-fund` and `npm run build` from the repository root. The hidden prompts below pass the key and hash over stdin to the one-shot Node process. Keep terminal tracing and recording off. Share only the aggregate result or error code.
 
 ```bash
-set +x
-read -rsp 'Brickset API key: ' BRICKSET_API_KEY; echo
-read -rsp 'Brickset user hash: ' BRICKSET_USER_HASH; echo
-read -rsp 'Separate preview password (24+ characters): ' DIAGNOSTIC_PASSWORD; echo
-read -rp 'Confirmed remaining calls today (at least 9): ' BRICKSET_REMAINING_CALLS
-export BRICKSET_API_KEY BRICKSET_USER_HASH DIAGNOSTIC_PASSWORD BRICKSET_REMAINING_CALLS
-export BRICKSET_PERMISSION_CONFIRMED=yes DIAGNOSTIC_MODE=live BRICKSET_SAMPLE_YEAR=2025
-npm start
+(
+  set +x
+  set -e -o pipefail
+  unset local_brickset_key local_brickset_hash
+  IFS= read -rs -p 'Brickset API key: ' local_brickset_key
+  printf '\n'
+  IFS= read -rs -p 'Brickset user hash: ' local_brickset_hash
+  printf '\n'
+  IFS= read -r -p 'Confirmed remaining calls (at least 9): ' remaining_calls
+
+  printf '%s\n' "$local_brickset_key" "$local_brickset_hash" |
+    NODE_TLS_REJECT_UNAUTHORIZED=1 node --input-type=module -e '
+      import {readFileSync} from "node:fs";
+      import {diagnose} from "./scripts/brickset-diagnostic.mjs";
+      const [apiKey, userHash] = readFileSync(0, "utf8").split("\n");
+      const report = await diagnose({
+        apiKey, userHash, permissionConfirmed: true,
+        remainingCalls: Number(process.argv[1]), year: 2025,
+      }, fetch);
+      console.log(JSON.stringify(report));
+      process.exitCode = report.status === "success" ? 0 : 1;
+    ' "$remaining_calls"
+)
 ```
-
-- Open the private HTTPS preview. HTTP Basic username: owner; password: the separate preview password. The application enforces authentication for every live route, including static files. It rejects missing permission or credentials. Never remove auth to work around forwarding. Both the creator-only tunnel and application Basic auth are required; proxy/header behavior is not yet verified. If the tunnel fails, stop and report the error. In shared environments use a private browsing session, stop the server after use and close that session; HTTP Basic has no in-app logout. Do not expose directly on a LAN or public network.
-- Each process starts one read-only run (maximum 9 calls; fewer for small results), no browser-triggered upstream calls, no retries, no polling, no persistent data or raw payload logging. Latest usage row must show at least 6 remaining after the initial three calls. Date/reset semantics are unvalidated; a fresh key with no usage rows may stop conservatively. Do not restart repeatedly.
-- Record only safe results: mode, success/error code, sample size, number of upstream calls, missing CAD/USD counts, exact-variant probe result, and whether Owned/Wanted counts agree with the Brickset account. Do not share the actual collection, labels, raw response or credentials. An empty account can validate an empty collection but cannot establish nonempty priority/flag semantics or myBricks sync. Those tests remain pending until normal account records exist.
-- After Ctrl+C run:
-
-```bash
-unset BRICKSET_API_KEY BRICKSET_USER_HASH DIAGNOSTIC_PASSWORD BRICKSET_REMAINING_CALLS BRICKSET_PERMISSION_CONFIRMED DIAGNOSTIC_MODE BRICKSET_SAMPLE_YEAR
-```
-
-Stop the codespace; clear your clipboard and close the private session.
 
 ## Public source control policy
 

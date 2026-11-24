@@ -12,3 +12,5 @@
 - ADR-26 (2026-11-24): Import source via GitHub content/tree objects into existing main history, preserving initialization commit; do not force-push local bundle over it. Keep local bundle as archival evidence. No external deployment or account changes.
 
 - ADR-27 (2026-11-24): Owner approved ChatGPT Project for architecture and Codex Cloud as primary development/testing environment. GitHub remains source of truth. Codespaces is optional for specific blockers, not a required dependency. No application migration, new subscription, deployment or account configuration authorized. Begin with fixtures, then verify current private network-secret support and POST form compatibility before any live run; prefer sanitized headless output. Existing V0.0 hard gates unchanged.
+
+- ADR-28 (2026-11-24) requires a synthetic URL-encoded POST probe before using Cloud network secrets for the diagnostic. Run the probe with its own temporary echo-host binding. If substitution remains unavailable, the owner can run the same headless diagnostic from a private terminal on their computer or an existing private Codespace.

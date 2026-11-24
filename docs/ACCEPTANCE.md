@@ -2,12 +2,17 @@
 
 **HOLD / outcome C.** 20/20 local tests passed on Node 22.16.0, TypeScript 5.8.3, including a fresh rerun during source transfer. No actual API calls. Six synthetic catalogue sets, four synthetic personal records (three joined, one unmatched), two pages, two variants of one number. CA present 2/6, US present 2/6, both present 1/6; these are fixture properties, not Brickset estimates. Injected transport exercises nine calls, 26 synthetic records, two pages and exact variant lookup. Local HTTP tests exercise both fixture and live-unconfigured modes. No mutation invoked. Browser QA attempted; bundled Playwright browser unavailable, system Chromium loopback navigation blocked by administrator. No screenshot/reflow/device claims. Dependency installation offline failed (registry cache absent); global tsc used. Test evidence in docs/test-results.txt. No production deployment.
 
-### Codex Cloud verification
+### Initial Codex Cloud verification
 
 - **Pass — dependency install and build.** Installed TypeScript 5.8.3 from npm with Node 24.22.3 and npm 11.19.1. The repository has no committed lockfile.
 - **Pass — offline suite.** All 25 tests passed (20 baseline, five headless-runner tests). Synthetic tests cover aggregate output, fixed POST requests, sanitized failures, zero requests when unconfigured, and HTTPS proxy routing without direct fallback.
 - **Pass — fixture browser QA.** Headless Chromium at 320, 412 and 1366 CSS pixels rendered six synthetic rows and reported zero upstream calls. Exact variant filter `90001-2`, zero versus unknown quantities, independent CAD/USD prices, no results, keyboard focus and horizontal reflow passed. Physical Chromebook and Pixel testing remains open.
-- **Blocked — live cloud acceptance.** The environment draft declares both network secrets for `brickset.com`. The active instance lacks these bindings, and its network policy denied access to the official Brickset docs. Managed substitution in POST forms, live authentication, quota, and account reconciliation remain unverified. No live API calls were made.
+- **Blocked — live cloud acceptance at initial setup.** The environment draft declared both network secrets for `brickset.com`. At that point the active instance lacked the bindings and its network policy denied access to Brickset.
+
+### POST preflight after PR #1
+
+- **Pass — reproducible install and offline suite.** Generated the npm lockfile for TypeScript 5.8.3, ran `npm ci --ignore-scripts --no-audit --no-fund`, and passed all 27 tests on Node 24.22.3. Two new offline tests check the form body, exact echo assertions, and rejection of unsafe inputs.
+- **Blocked — managed POST substitution.** Status reports both Brickset bindings ready and scoped to `brickset.com`. Presence alone leaves body substitution unverified. The synthetic echo host was denied by the current restricted policy, and the separate synthetic binding was absent. The probe requires a temporary host grant and a public synthetic value in a separate network secret. No Brickset API requests were made.
 
 | ID | Status | Evidence / next action |
 |---|---|---|
@@ -31,8 +36,8 @@
 T03 and T14 pass within current implementation scope only. T01/T02/T04/T06/T11/T12/T13 live hard gates still open. V0.1 not started or authorized by this result.
 
 ## Live completion plan (when authorized)
-1. Verify permission and privacy; check API key/hash and actual usage. Check no credential leakage in network/browser bundle/logs, unauthorized access denied both UI and API over private tunnel. No persistent cache/images.
+1. Verify permission and privacy, confirm secure POST substitution if using Cloud, and check the API key/hash and actual usage through an authorized headless run. Retain only sanitized aggregate output.
 2. Record timestamp, approved quota, counts and field presence (no personal raw payloads). Compare Owned/Wanted distinct counts/quantities against Brickset UI and sample at least 10 existing varied records. Check priority code mapping using account UI, flags/labels and new/used quantities. Do not mutate within V0.0. Empty collection confirms only the empty case.
 3. Sample 50–100 actual sets across older/current/upcoming, themes, variants and product types; use a bounded diagnostic run per authorized year plus selected exact/name/theme/subtheme queries. Current candidate only supports one year and exact probe: extend test harness inside V0.0 as needed, avoid extra requests before budget approval. Record match precision, pages and missing CAD/USD/UPC/EAN counts; compare selected prices/dates to Brickset pages and distinguish MSRP vs current sale. No claim of entire catalogue coverage. Clarify exit-date semantics with provider if needed.
 4. Observe an already-made or user-initiated ordinary myBricks update, verify sync in Brickset, then explicit fresh diagnostic. Compare counts; no application mutation. If no change available, leave T10 not tested.
-5. Verify error handling with simulated failures, do not deliberately exhaust real quota. Test a permitted export if API access insufficient; verify format and parity before implementing importer. Validate actual mobile/desktop browser preview and private proxy authentication. Stop at compatibility gate, report Pass/Partial/Fail/Blocked/Not tested; no V0.1 without authorization.
+5. Verify error handling with simulated failures and stay within the confirmed quota. If API access is insufficient, test a permitted export and verify format and parity before implementing an importer. Check the fixture UI on physical mobile and desktop devices. Stop at the V0.0 compatibility gate and report Pass, Partial, Fail, Blocked, or Not tested for each item.
