@@ -1,6 +1,6 @@
 # V0.0 acceptance / decision gate — 2026-11-24
 
-**HOLD / outcome C.** 20/20 local tests passed on Node 22.16.0, TypeScript 5.8.3, including a fresh rerun during source transfer. No actual API calls. Six synthetic catalogue sets, four synthetic personal records (three joined, one unmatched), two pages, two variants of one number. CA present 2/6, US present 2/6, both present 1/6; these are fixture properties, not Brickset estimates. Injected transport exercises nine calls, 26 synthetic records, two pages and exact variant lookup. Local HTTP tests exercise both fixture and live-unconfigured modes. No mutation invoked. Browser QA attempted; bundled Playwright browser unavailable, system Chromium loopback navigation blocked by administrator. No screenshot/reflow/device claims. Dependency installation offline failed (registry cache absent); global tsc used. Test evidence in docs/test-results.txt. No production deployment.
+**Historical baseline — HOLD / outcome C (before live test).** 20/20 local tests passed on Node 22.16.0, TypeScript 5.8.3, including a fresh rerun during source transfer. No actual API calls. Six synthetic catalogue sets, four synthetic personal records (three joined, one unmatched), two pages, two variants of one number. CA present 2/6, US present 2/6, both present 1/6; these are fixture properties, not Brickset estimates. Injected transport exercises nine calls, 26 synthetic records, two pages and exact variant lookup. Local HTTP tests exercise both fixture and live-unconfigured modes. No mutation invoked. Browser QA attempted; bundled Playwright browser unavailable, system Chromium loopback navigation blocked by administrator. No screenshot/reflow/device claims. Dependency installation offline failed (registry cache absent); global tsc used. Test evidence in docs/test-results.txt. No production deployment.
 
 ### Initial Codex Cloud verification
 
@@ -15,26 +15,32 @@
 - **Blocked — managed POST substitution.** Status reports both Brickset bindings ready and scoped to `brickset.com`. Presence alone leaves body substitution unverified. The synthetic echo host was denied by the current restricted policy, and the separate synthetic binding was absent. The probe requires a temporary host grant and a public synthetic value in a separate network secret. No Brickset API requests were made.
 - **Blocked — follow-up probe.** Ran `node scripts/cloud-post-probe.mjs` once on the Cloud task. It printed `binding_missing_or_unsafe` and exited with status 1 before sending a POST. The running task lacked `CLOUD_POST_PROBE` and its enforced allowlist omitted `httpbingo.org`. A fresh `npm ci` and all 27 offline tests passed. For a separately authorized Brickset compatibility test while Cloud substitution is unverified, use the [owner-operated headless fallback](../README.md#owner-operated-fallback--private-terminal).
 
+### First owner-operated live validation — 2026-11-24
+
+**Current decision: HOLD / outcome B (partial provider compatibility).** Owner supplied a sanitized successful headless result from the merged PR #2 implementation. Repository merge and source path independently checked; live execution is owner-reported, not an independently rerun request. Nine attempted calls completed, including key/hash validation, usage, collection/flag-label reads, two 25-record catalogue pages for 2025 and an exact full-number probe. Fifty unique catalogue identities normalized and the exact probe matched. Both native MSRP fields and UPC/EAN were non-null in the normalized sample; zero-price sentinels, GTIN validity, source value parity and broader catalogue representativeness still need inspection. Nonempty collection and flag semantics are not established. Quota guard accepted the run; actual daily limit, before/after usage and reset are not reported by this runner. No mutations, persistent cache, images or deployment in the tested path. No personal collection values, account quota records, credentials or raw provider payloads published.
+
+The owner-operated headless path is usable; Codex Cloud managed form substitution remains unverified and is not required for this test. Browser/private preview authentication remains a separate check before deploying a web app.
+
 | ID | Status | Evidence / next action |
 |---|---|---|
 | T01 | Partial | personal companion permission and key issuance reported by owner; persistent caching/image scope unclarified |
-| T02 | Blocked | HTTP Basic guard and headless proxy routing pass offline; managed POST substitution, actual key/hash and private tunnel untested |
-| T03 | Pass | fixed read allowlist; POST upstream retrieval only; browser POST 405 and mutation route 404; no live calls |
-| T04 | Blocked | synthetic join works; actual account counts/quantities not reconciled |
-| T05 | Partial | fixtures retain raw priority, condition and flags; code mapping not verified |
-| T06 | Partial | synthetic ID join, variants and pagination; actual number/name/theme/subtheme results not verified |
-| T07 | Not tested | 50–100 real representative sets not sampled |
-| T08 | Partial | synthetic native values and nulls pass; actual CA/US coverage unknown |
+| T02 | Pass | owner-reported successful key/hash verification via audited private headless path; hidden prompts and aggregate-only output; no server opened. Cloud substitution and live browser auth not certified |
+| T03 | Pass | fixed read allowlist; POST upstream retrieval only; browser POST 405 and mutation route 404 in tests; first owner-reported live run used only bounded reads |
+| T04 | Partial | live collection envelope accepted; nonempty record retrieval and private account reconciliation remain outstanding |
+| T05 | Partial | live flag-label endpoint accepted; nonempty priority/condition/flag values and mapping remain unverified |
+| T06 | Partial | two live pages and exact full-number probe succeeded per owner report; name/theme/subtheme, ambiguity and broader variants pending |
+| T07 | Partial | 50 live normalized records from one 2025 query; cross-year/theme/lifecycle and product-type representativeness pending |
+| T08 | Pass | owner-reported 50/50 non-null normalized fields in each native market, no FX fallback; coverage only, not zero sentinel semantics or source price parity |
 | T09 | Partial | raw lifecycle fields kept separate; real date semantics not verified |
 | T10 | Not tested | myBricks -> Brickset -> diagnostic refresh not tested |
-| T11 | Partial | all-call docs and usage endpoint verified; injected budget/429 checks pass; live entitlement/reset unknown |
+| T11 | Partial | successful nine-call diagnostic and usage guard per owner report; observed before/after count, actual daily limit/reset and search budget pending |
 | T12 | Blocked | no persistent cache; persistent retention permission pending |
-| T13 | Partial | injected timeout, unauthorized, quota, upstream and bad payload pass; the headless runner returns a sanitized error and does not retry after proxy failure; live transport untested |
+| T13 | Partial | offline failure tests and owner-reported successful live transport; nonempty reconciliation and further response shape checks pending; do not deliberately exhaust quota |
 | T14 | Pass | fixture fallback tested and labeled; actual export import not implemented or tested |
 | T15 | Not tested | optional RSS directory documented, no XML/rights verification |
-| T16 | Partial | synthetic UPC string leading zeros; actual EAN/UPC coverage and variants untested |
+| T16 | Partial | owner-reported 50/50 non-null fields for both UPC and EAN; GTIN validation, aliases and regional variant coverage remain open |
 
-T03 and T14 pass within current implementation scope only. T01/T02/T04/T06/T11/T12/T13 live hard gates still open. V0.1 not started or authorized by this result.
+4 Pass / 9 Partial / 1 Blocked / 2 Not tested (16 total). T02 and T08 pass only within the tested headless authentication and sample field-coverage scope. T01/T04/T06/T11/T12/T13 hard gates remain open. V0.1 not started or authorized. Next: improve aggregate diagnostics for quota before/after, personal field completeness, zero MSRP vs missing, GTIN checks and representative bounded query coverage, offline-test first. Then owner runs approved read-only tests against existing genuine collection records; compare privately. Obtain explicit provider retention/image guidance. No requirement to add artificial records, mutate via API, or repeat the blocked Cloud probe.
 
 ## Live completion plan (when authorized)
 1. Verify permission and privacy, confirm secure POST substitution if using Cloud, and check the API key/hash and actual usage through an authorized headless run. Retain only sanitized aggregate output.
