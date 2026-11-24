@@ -42,9 +42,24 @@ The owner-operated headless path is usable; Codex Cloud managed form substitutio
 
 4 Pass / 9 Partial / 1 Blocked / 2 Not tested (16 total). T02 and T08 pass only within the tested headless authentication and sample field-coverage scope. T01/T04/T06/T11/T12/T13 hard gates remain open. V0.1 not started or authorized. Next: improve aggregate diagnostics for quota before/after, personal field completeness, zero MSRP vs missing, GTIN checks and representative bounded query coverage, offline-test first. Then owner runs approved read-only tests against existing genuine collection records; compare privately. Obtain explicit provider retention/image guidance. No requirement to add artificial records, mutate via API, or repeat the blocked Cloud probe.
 
+## Expanded diagnostic implementation — 2026-11-24
+
+**Pass — offline implementation.** A clean lockfile install and all 36 tests passed on Node 24.22.3. Nine added tests cover the 16-call read plan, report sanitization, catalogue slices, query precision and ambiguity, MSRP zeros, GTIN format and checksum, collection field coverage, quota rollover and early stops, malformed responses, and credential and budget preflight. The fixture preview served six synthetic rows with zero upstream calls. The owner command also completed in a synthetic terminal with hidden input and one JSON report. The original nine-call profile remains covered by the existing suite.
+
+| IDs | Status | Expanded evidence and next check |
+|---|---|---|
+| T04–T05 | Partial | Offline summaries distinguish empty and nonempty collection data, independent Owned/Wanted quantities, priority coverage, new/used/loose fields and flag coverage. Reconcile existing records privately. |
+| T06–T07 | Partial | Offline checks cover exact full number, name, theme and subtheme plus six catalogue slices. Live match precision and breadth are pending. |
+| T08–T09 | Pass within initial live sample for T08; Partial for T09 | Expanded offline checks distinguish missing and zero native MSRP, record release flags and count launch/exit dates. Source parity and date semantics remain open. |
+| T11 | Partial | Offline checks enforce the 16-call budget and compare observed usage only within the same provider-reported day. Actual expanded readings and reset semantics are pending. |
+| T13 | Partial | Offline tests verify fail-closed response and traffic handling. Expanded live response shapes remain unverified. |
+| T16 | Partial | Offline checks validate UPC-A and EAN-8/EAN-13 formats and checksums. Live format coverage, aliases and regional variants remain open. |
+
+The expanded profile has not run against Brickset. Outcome B / HOLD and the original acceptance matrix still apply. Use the documented owner-operated command in a private terminal or existing private Codespace. [Owner-operated diagnostic](../README.md#owner-operated-fallback--private-terminal)
+
 ## Live completion plan (when authorized)
 1. Verify permission and privacy, confirm secure POST substitution if using Cloud, and check the API key/hash and actual usage through an authorized headless run. Retain only sanitized aggregate output.
 2. Record timestamp, approved quota, counts and field presence (no personal raw payloads). Compare Owned/Wanted distinct counts/quantities against Brickset UI and sample at least 10 existing varied records. Check priority code mapping using account UI, flags/labels and new/used quantities. Do not mutate within V0.0. Empty collection confirms only the empty case.
-3. Sample 50–100 actual sets across older/current/upcoming, themes, variants and product types; use a bounded diagnostic run per authorized year plus selected exact/name/theme/subtheme queries. Current candidate only supports one year and exact probe: extend test harness inside V0.0 as needed, avoid extra requests before budget approval. Record match precision, pages and missing CAD/USD/UPC/EAN counts; compare selected prices/dates to Brickset pages and distinguish MSRP vs current sale. No claim of entire catalogue coverage. Clarify exit-date semantics with provider if needed.
+3. Run the expanded profile once with an approved budget. Review whether its six slices cover 50–100 actual sets across older/current/upcoming, themes, variants and product categories. Record match precision, page counts, missing and zero CAD/USD MSRP and barcode quality counts. Compare selected prices and dates to Brickset pages and distinguish MSRP from current sale. Clarify exit-date semantics with provider if needed.
 4. Observe an already-made or user-initiated ordinary myBricks update, verify sync in Brickset, then explicit fresh diagnostic. Compare counts; no application mutation. If no change available, leave T10 not tested.
 5. Verify error handling with simulated failures and stay within the confirmed quota. If API access is insufficient, test a permitted export and verify format and parity before implementing an importer. Check the fixture UI on physical mobile and desktop devices. Stop at the V0.0 compatibility gate and report Pass, Partial, Fail, Blocked, or Not tested for each item.

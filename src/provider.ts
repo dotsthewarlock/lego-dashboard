@@ -1,5 +1,8 @@
-import {DiagnosticError,obj,rows,normalize,qty,text,type Obj,type Snapshot} from './domain.js';
+import {DiagnosticError,collectionRecords,flagLabels,obj,rows,normalize,qty,text,type Obj,type Snapshot} from './domain.js';
 import {mockPages,mockCollection,mockLabels,mockUsage} from './fixtures.js';
+import {
+  EXPANDED_REQUEST_LIMIT, catalogueSummary, collectionSummary, latestUsage, sampleCatalogue, searchProbes, usageSummary,
+} from './compatibility.js';
 export interface Provider { snapshot():Promise<Snapshot>; }
 export class FixtureProvider implements Provider {async snapshot(){return normalize('fixture',mockPages,mockCollection,mockLabels,mockUsage,0,[{name:'Synthetic two-page join',matches:6,returned:6,consistent:true}]);}}
 const methods=['checkKey','checkUserHash','getKeyUsageStats','getCollection','getUserFlagLabels','getSets'] as const;
@@ -8,9 +11,9 @@ export interface Config {apiKey:string;userHash:string;permissionConfirmed:boole
 export class BricksetProvider implements Provider {
   private calls=0;
   constructor(private config:Config,private transport:typeof fetch=fetch,private timeout=12000){}
-  private async request(method:Method,params?:Obj):Promise<Obj>{
+  private async request(method:Method,params?:Obj, limit=9):Promise<Obj>{
     if(!methods.includes(method))throw new DiagnosticError('invalid');
-    if(this.calls>=9||this.calls>=this.config.remainingCalls)throw new DiagnosticError('quota');this.calls++;
+    if(this.calls>=limit||this.calls>=this.config.remainingCalls)throw new DiagnosticError('quota');this.calls++;
     const body=new URLSearchParams({apiKey:this.config.apiKey});
     if(method==='getSets') {body.set('userHash','');body.set('params',JSON.stringify(params));}
     else if(['checkUserHash','getCollection','getUserFlagLabels'].includes(method))body.set('userHash',this.config.userHash);
@@ -21,6 +24,33 @@ export class BricksetProvider implements Provider {
     if(o.status==='error'){const m=typeof o.message==='string'?o.message.toLowerCase():'';throw new DiagnosticError(/limit|quota/.test(m)?'quota':/key|hash|unauthor/.test(m)?'unauthorized':'upstream');}
     if(o.status!=='success')throw new DiagnosticError('invalid');return o;
   }
+  async expandedDiagnostic() {
+    const {permissionConfirmed, apiKey, userHash, remainingCalls, year} = this.config;
+    if (!permissionConfirmed || !apiKey || !userHash || !Number.isSafeInteger(remainingCalls) ||
+      remainingCalls < EXPANDED_REQUEST_LIMIT || !Number.isInteger(year) || year <= 1999 || year >= 2100 ||
+      this.calls !== 0) throw new DiagnosticError('unconfigured');
+
+    const request = (method: Method, params?: Obj) => this.request(method, params, EXPANDED_REQUEST_LIMIT);
+    const observedDay = new Date().toISOString().slice(0, 10);
+    const before = latestUsage(await request('getKeyUsageStats'));
+    if (before.dailyLimit - before.used < EXPANDED_REQUEST_LIMIT - 1) throw new DiagnosticError('quota');
+
+    await request('checkKey');
+    await request('checkUserHash');
+    const collection = collectionRecords(await request('getCollection'));
+    const labels = flagLabels(await request('getUserFlagLabels'));
+    const getSets = (params: Obj) => request('getSets', params);
+    const {samples, slices} = await sampleCatalogue(year, getSets);
+    const queries = await searchProbes(samples, getSets);
+    const after = latestUsage(await request('getKeyUsageStats'));
+    return {
+      quota: usageSummary(before, after),
+      catalogue: {...catalogueSummary(samples, observedDay), slices},
+      queries,
+      collection: collectionSummary(collection, samples, labels),
+    };
+  }
+
   async snapshot():Promise<Snapshot>{
     const c=this.config;if(!c.permissionConfirmed||!c.apiKey||!c.userHash||!Number.isInteger(c.remainingCalls)||c.remainingCalls<9||!Number.isInteger(c.year)||c.year<1949||c.year>2100)throw new DiagnosticError('unconfigured');
     await this.request('checkKey');await this.request('checkUserHash');

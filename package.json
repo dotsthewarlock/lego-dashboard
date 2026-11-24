@@ -1,1 +1,18 @@
-{"name":"lego-companion-compatibility","version":"0.0.0","private":true,"type":"module","engines":{"node":">=22"},"scripts":{"build":"tsc -p tsconfig.json","test":"npm run build && node --test tests/*.test.mjs","start":"npm run build && node server.mjs"},"devDependencies":{"typescript":"5.8.3"}}
+{
+  "name": "lego-companion-compatibility",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "start": "npm run build && node server.mjs",
+    "diagnostic:owner": "npm run --silent build && bash scripts/brickset-owner.sh"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
+  }
+}

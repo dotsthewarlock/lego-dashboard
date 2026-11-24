@@ -33,10 +33,15 @@ export function catalogue(o:Obj, p:Map<number,Personal>):SetRecord {
   let sourceURL:string|null=null;try{const u=new URL(text(o.bricksetURL)??'');if(u.origin==='https://brickset.com'&&u.pathname.startsWith('/sets/')&&!u.username&&!u.password){u.search='';u.hash='';sourceURL=u.href;}}catch{}
   return {setID,number,variant,name,theme:text(o.theme),subtheme:text(o.subtheme),year:qty(o.year),released:bool(o.released),launchDate:text(o.launchDate),exitDate:text(o.exitDate),availabilityRaw:text(o.availability),CAD:region(markets.CA,'CAD'),USD:region(markets.US,'USD'),UPC:text(barcode.UPC),EAN:text(barcode.EAN),providerUpdated:text(o.lastUpdated),sourceURL,personal:p.get(setID)??null};
 }
+export function collectionRecords(response: unknown): Personal[] {
+  const result = rows(response, 'sets');
+  if (result.matches !== result.rows.length) throw new DiagnosticError('invalid');
+  return unique(result.rows.map(personal), record => record.setID);
+}
 export function normalize(mode:Mode, pages:unknown[], collection:unknown, labels:unknown, usage:unknown, calls:number, probes:Snapshot['probes']=[]):Snapshot {
-  const c=rows(collection,'sets');if(c.matches!==c.rows.length)throw new DiagnosticError('invalid');const p=unique(c.rows.map(personal),v=>v.setID);const map=new Map(p.map(v=>[v.setID,v]));
+  const p=collectionRecords(collection);const map=new Map(p.map(v=>[v.setID,v]));
   const parsed=pages.map(x=>rows(x,'sets'));if(!parsed.length||parsed.some(x=>x.matches!==parsed[0].matches))throw new DiagnosticError('invalid');
   const sets=unique(parsed.flatMap(x=>x.rows.map(o=>catalogue(o,map))),s=>s.setID);if(sets.length>parsed[0].matches)throw new DiagnosticError('invalid');
   const u=rows(usage,'apiKeyUsage');if(u.matches!==u.rows.length)throw new DiagnosticError('invalid');
-  return {mode,observedAt:new Date().toISOString(),sets,personal:p,flagLabels:flagLabels(labels),matches:parsed[0].matches,collectionMatches:c.matches,calls,usage:u.rows.map(o=>({dateStamp:text(o.dateStamp),count:qty(o.count),dailyLimit:qty(o.dailyLimit)})),probes};
+  return {mode,observedAt:new Date().toISOString(),sets,personal:p,flagLabels:flagLabels(labels),matches:parsed[0].matches,collectionMatches:p.length,calls,usage:u.rows.map(o=>({dateStamp:text(o.dateStamp),count:qty(o.count),dailyLimit:qty(o.dailyLimit)})),probes};
 }
